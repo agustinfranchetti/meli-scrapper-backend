@@ -12,10 +12,10 @@ def build_result_dict_and_append_to_array(search_results):
     :rtype: list
     """
     origin_array = []
-    print('----RESULTS START----')
-    print(f'Found {len(search_results)} results')
+    #print furst result as json
     for result in search_results:
         result_url = result.find_elements('xpath',".//a")[0].get_attribute('href')
+        #get image_url (start with https)
         result_image_url = result.find_elements('xpath',".//img")[0].get_attribute('src')
         fetched_result_data = result.text.split('\n')
         #Remove Mas vendido or Oferta del dia from title
@@ -23,6 +23,9 @@ def build_result_dict_and_append_to_array(search_results):
             fetched_result_data.pop(0)
         
         result_title = fetched_result_data[0]
+        if fetched_result_data[3]=="$":
+            fetched_result_data.pop(3)
+
         result_price = f"${fetched_result_data[3]}"
         result_extras = fetched_result_data[4:]
         #remove isolated numbers from extras
@@ -57,8 +60,10 @@ def search_items(term):
     #To run withouth opening the browser    
     chromeOptions = webdriver.ChromeOptions()
     chromeOptions.add_argument("--headless")
+    #wait for page to load
+    webdriver.DesiredCapabilities.CHROME['pageLoadStrategy'] = 'normal'
     driver = webdriver.Chrome(PATH, options=chromeOptions);
-
+    wait = driver.implicitly_wait(1000)
     driver.get('https://mercadolibre.com.ar/')
 
     search = driver.find_element("name", 'as_word')
@@ -77,7 +82,6 @@ def search_items(term):
     search.send_keys(Keys.RETURN)
 
     #TODO: -> Wait for redirect
-    time.sleep(1)
 
     # RAW RESULTS AS DICT
     search_results = driver.find_elements('xpath',"//*[starts-with(@class, 'ui-search-result__wrapper')]")
