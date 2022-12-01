@@ -12,28 +12,36 @@ def build_result_dict_and_append_to_array(search_results):
     :rtype: list
     """
     origin_array = []
+    print('----RESULTS START----')
+    print(f'Found {len(search_results)} results')
     for result in search_results:
+        result_url = result.find_elements('xpath',".//a")[0].get_attribute('href')
+        result_image_url = result.find_elements('xpath',".//img")[0].get_attribute('src')
         fetched_result_data = result.text.split('\n')
         #Remove Mas vendido or Oferta del dia from title
-        if (fetched_result_data[0] in ["MÁS VENDIDO", "OFERTA DEL DÍA"]):
+        if (fetched_result_data[0] in ["MÁS VENDIDO", "OFERTA DEL DÍA", "RECOMENDADO"]):
             fetched_result_data.pop(0)
         
         result_title = fetched_result_data[0]
         result_price = f"${fetched_result_data[3]}"
         result_extras = fetched_result_data[4:]
+        #remove isolated numbers from extras
+        result_extras = [extra for extra in result_extras if not extra.isdigit()]
 
         #Removes llega gratis mañana from extras to save it as a boolean value
         if ("Llega gratis mañana" in result_extras):
             result_extras.remove("Llega gratis mañana")
-            result_arrives_tmrw = "SI"
+            result_arrives_tmrw = True
         else:
-            result_arrives_tmrw = "NO"
+            result_arrives_tmrw = False
 
         result_data_dict = dict(
-            TITLE= result_title,
-            PRICE= result_price,
-            EXTRAS= result_extras,
-            FREE_SHPPNG_TMRW= result_arrives_tmrw
+            title= result_title,
+            price= result_price,
+            extras= result_extras,
+            free_shipping= result_arrives_tmrw,
+            url= result_url,
+            image_url= result_image_url
         )
         origin_array.append(result_data_dict)
 
@@ -53,9 +61,6 @@ def search_items(term):
 
     driver.get('https://mercadolibre.com.ar/')
 
-    print('-------TITLE-------')
-    print(driver.title)
-    
     search = driver.find_element("name", 'as_word')
     search.send_keys(term)
 
@@ -72,6 +77,7 @@ def search_items(term):
     search.send_keys(Keys.RETURN)
 
     #TODO: -> Wait for redirect
+    time.sleep(1)
 
     # RAW RESULTS AS DICT
     search_results = driver.find_elements('xpath',"//*[starts-with(@class, 'ui-search-result__wrapper')]")
