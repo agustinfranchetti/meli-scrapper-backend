@@ -63,7 +63,6 @@ def search_items(term):
     #wait for page to load
     webdriver.DesiredCapabilities.CHROME['pageLoadStrategy'] = 'normal'
     driver = webdriver.Chrome(PATH, options=chromeOptions);
-    wait = driver.implicitly_wait(1000)
     driver.get('https://mercadolibre.com.ar/')
 
     search = driver.find_element("name", 'as_word')
